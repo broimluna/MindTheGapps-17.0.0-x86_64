@@ -6,15 +6,21 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     
+    - name: Install build dependencies
+      run: sudo apt-get update && sudo apt-get install -y zip unzip make
+
     - name: Clone MindTheGapps repo
       run: |
-        git clone https://gitlab.com/MindTheGapps/vendor_gapps/-/tree/cinnamonbun --depth=1 -b upsilon
+        git clone --depth=1 --branch cinnamonbun https://gitlab.com/MindTheGapps/vendor_gapps.git
         
     - name: Build MindTheGapps (x86_64)
       run: |
@@ -22,7 +28,14 @@ jobs:
         make gapps_x86_64
         
     - name: Create MTG Release Tag
-      run:  echo "ZIP_FILE_NAME=$(basename vendor_gapps/out/MindTheGapps-*.zip .zip)" >> $GITHUB_ENV
+      run: |
+        ZIP_PATH=$(ls vendor_gapps/out/MindTheGapps-*.zip | head -n 1)
+        if [ -z "$ZIP_PATH" ]; then
+          echo "Build failed: Zip file not found!"
+          exit 1
+        fi
+        ZIP_FILE_NAME=$(basename "$ZIP_PATH" .zip)
+        echo "ZIP_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
 
     - name: Upload MindTheGapps builds to release 🤌
       uses: softprops/action-gh-release@v2
