@@ -34,6 +34,9 @@ jobs:
           echo "Build failed: Zip file not found!"
           exit 1
         fi
+        # Generate the missing md5sum file
+        md5sum "$ZIP_PATH" > "$ZIP_PATH.md5sum"
+        
         ZIP_FILE_NAME=$(basename "$ZIP_PATH" .zip)
         echo "ZIP_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
 
